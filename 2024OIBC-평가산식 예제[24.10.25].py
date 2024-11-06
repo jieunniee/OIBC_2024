@@ -8,7 +8,7 @@ def calculate_measure(actual, forecast):
     positive_index = actual > 0
     negative_index = actual <= 0
 
-    # actual handles values ​​between 0 and -1
+    # actual handles values between 0 and -1
     actual[(actual <= 0) & (actual > -1)] = -1
     
     # Number of positive and negative prices
