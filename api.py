@@ -40,3 +40,28 @@ for date in dates:
 
 df = pd.DataFrame(actual_weathers)
 df.to_csv("기상실측데이터_3.csv", index=False)
+
+smps = []
+for date in dates:
+    smp = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/smp-da/{date}', headers={
+                                'Authorization': f'Bearer {API_KEY}'
+                            }).json()
+    # print(smp)
+    # print(smp[0])
+    # print()
+    smps.extend(smp)
+
+df2 = pd.DataFrame(smps)
+df2.to_csv("제주전력시장_시장전기가격_하루전가격_2.csv", index=False)
+
+states = []
+for date in dates:
+    state = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/elec-supply/{date}', headers={
+                                'Authorization': f'Bearer {API_KEY}'
+                            }).json()
+    print(state)
+    print()
+    states.extend(state)
+
+df3 = pd.DataFrame(states)
+df3.to_csv("제주전력시장_현황데이터_2.csv", index=False)
