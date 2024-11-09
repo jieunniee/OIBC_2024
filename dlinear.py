@@ -111,7 +111,10 @@ class LTSF_DLinear(torch.nn.Module):
         x = seasonal_output + trend_output
         # print(x.shape, x_onehot.shape)
         # x = self.fc_onehot(torch.concat([x, x_onehot], dim=1))
-        return x.permute(0, 2, 1)
+
+        x = x.permute(0, 2, 1)
+        x = x[..., 26]
+        return x
 
 
 class DLinearMultiOutput(nn.Module):

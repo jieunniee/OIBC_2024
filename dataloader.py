@@ -69,7 +69,7 @@ def get_dataloader(window_size, forecast_size, batch_size=128):
     val_dataset = OIBCDataset(val_data, val_label, window_size, forecast_size)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+    val_dataloader = DataLoader(val_dataset, batch_size=1)
 
     return train_dataloader, val_dataloader, scaler
 
