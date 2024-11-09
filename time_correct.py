@@ -14,7 +14,7 @@ def convert_from_base_time(seconds_since_base):
     return target_date
 
 # Testing the function with an example value
-example_seconds = 1729612800  # Example seconds since 1970-01-01 09:00 KST
+example_seconds = 1730991600  # Example seconds since 1970-01-01 09:00 KST
 print(convert_from_base_time(example_seconds))
 
 # Define the function to convert a given datetime to seconds since "1970-01-01 09:00 KST"

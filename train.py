@@ -1,3 +1,5 @@
+import os
+
 import torch
 from torch import optim, nn
 from tqdm import tqdm
@@ -6,6 +8,28 @@ from dataloader import get_dataloader
 from dlinear import LTSF_DLinear
 from util import CustomLoss
 from cnn_lstm import CNNLSTMRegressor
+
+
+def save_checkpoint(model, optimizer, epoch, loss, file_folder):
+    """
+    모델의 체크포인트를 저장합니다.
+
+    Parameters:
+    - model (torch.nn.Module): 저장할 모델
+    - optimizer (torch.optim.Optimizer): 모델의 옵티마이저
+    - epoch (int): 현재 에포크
+    - loss (float): 현재 손실 값
+    - file_path (str): 저장할 파일 경로 (기본값은 'checkpoint.pth')
+    """
+    file_path = os.path.join(file_folder, 'checkpoint_{}.pth'.format(epoch))
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': loss
+    }
+    torch.save(checkpoint, file_path)
+    print(f"Checkpoint saved at {file_path}")
 
 
 def train():
@@ -91,6 +115,7 @@ def train():
 
         print('epoch {}, val loss: {:.8f}, {:.8f}'.format(epoch, sum(val_losses) / len(val_losses), sum(val_losses2) / len(val_losses2)))
 
+        save_checkpoint(model, optimizer, epoch, sum(val_losses) / len(val_losses), file_folder='checkpoint')
 
 if __name__ == '__main__':
     train()

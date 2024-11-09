@@ -29,39 +29,51 @@ dates = [
     # '2024-11-10',
 ]
 
-actual_weathers = []
+# actual_weathers = []
+# for date in dates:
+#     actual_weather = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/actual-weather/{date}', headers={
+#                                 'Authorization': f'Bearer {API_KEY}'
+#                             }).json()
+#
+#     actual_weathers.extend(actual_weather['actual_weather_1'])
+#     actual_weathers.extend(actual_weather['actual_weather_2'])
+#
+# df = pd.DataFrame(actual_weathers)
+# df.to_csv("기상실측데이터_3.csv", index=False)
+#
+# smps = []
+# for date in dates:
+#     smp = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/smp-da/{date}', headers={
+#                                 'Authorization': f'Bearer {API_KEY}'
+#                             }).json()
+#     # print(smp)
+#     # print(smp[0])
+#     # print()
+#     smps.extend(smp)
+#
+# df2 = pd.DataFrame(smps)
+# df2.to_csv("제주전력시장_시장전기가격_하루전가격_2.csv", index=False)
+#
+# states = []
+# for date in dates:
+#     state = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/elec-supply/{date}', headers={
+#                                 'Authorization': f'Bearer {API_KEY}'
+#                             }).json()
+#     print(state)
+#     print()
+#     states.extend(state)
+#
+# df3 = pd.DataFrame(states)
+# df3.to_csv("제주전력시장_현황데이터_2.csv", index=False)
+
+states2 = []
 for date in dates:
-    actual_weather = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/actual-weather/{date}', headers={
+    state2 = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/smp-rt-rc/{date}', headers={
                                 'Authorization': f'Bearer {API_KEY}'
                             }).json()
-
-    actual_weathers.extend(actual_weather['actual_weather_1'])
-    actual_weathers.extend(actual_weather['actual_weather_2'])
-
-df = pd.DataFrame(actual_weathers)
-df.to_csv("기상실측데이터_3.csv", index=False)
-
-smps = []
-for date in dates:
-    smp = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/smp-da/{date}', headers={
-                                'Authorization': f'Bearer {API_KEY}'
-                            }).json()
-    # print(smp)
-    # print(smp[0])
-    # print()
-    smps.extend(smp)
-
-df2 = pd.DataFrame(smps)
-df2.to_csv("제주전력시장_시장전기가격_하루전가격_2.csv", index=False)
-
-states = []
-for date in dates:
-    state = requests.get(f'https://research-api.solarkim.com/data/cmpt-2024/elec-supply/{date}', headers={
-                                'Authorization': f'Bearer {API_KEY}'
-                            }).json()
-    print(state)
+    print(state2)
     print()
-    states.extend(state)
+    states2.extend(state2)
 
-df3 = pd.DataFrame(states)
-df3.to_csv("제주전력시장_현황데이터_2.csv", index=False)
+df4 = pd.DataFrame(states2)
+df4.to_csv("제주전력시장_시장전기가격_실시간가격_2.csv", index=False)
