@@ -8,27 +8,12 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class OIBCDataset(Dataset):
-    def __init__(self, df, window_size, forecast_size):
-        self.df = df
+    def __init__(self, train_data, labels, window_size, forecast_size):
         self.window_size = window_size
         self.forecast_size = forecast_size
 
-        self.to_drop_columns = ['하루전가격(원/kWh)', '확정가격여부', 'ts']
-
-        # self.train_data = self.df.drop(columns=self.to_drop_columns)
-
-        for idx, columns in enumerate(self.df.columns):
-            print(idx, columns)
-
-        # print(self.df.columns)
-        self.train_data = self.df.drop(columns=self.to_drop_columns).values.astype(np.float32)
-        self.labels = self.df['하루전가격(원/kWh)'].values.astype(np.float32)
-
-        print(self.labels.shape)
-
-        scaler = MinMaxScaler()
-        self.train_data = scaler.fit_transform(self.train_data)
-        self.labels = scaler.fit_transform(self.labels.reshape(-1, 1))
+        self.train_data = train_data
+        self.labels = labels
 
     def __len__(self):
         return len(self.train_data) - self.window_size - self.forecast_size + 1
@@ -38,28 +23,53 @@ class OIBCDataset(Dataset):
         label = torch.from_numpy(self.labels[idx + self.window_size: idx + self.window_size + self.forecast_size])
 
         data = data[..., ]
-        # print(data, label)
 
         return data, label
 
 
 def get_dataloader(window_size, forecast_size, batch_size=128):
+    to_drop_columns = ['하루전가격(원/kWh)', '확정가격여부', 'ts']
+    location_columns = []
+
     df = pd.read_csv('OIBC_2024_DATA/data/train_dataset_with_condition.csv')
-    print('len:', len(df))
+
+    for idx, column in enumerate(df.columns):
+        print(idx, column)
+
+        if 'location' in column:
+            location_columns.append(column)
+
+
     # 임시로 해당 위치만 데이터로 사용
-    df = df[df['location_Bonggae-dong'] == True]
-    print('len:', len(df))
+    # df = df[df['location_Bonggae-dong'] == True]
+
+    # data = df.drop(columns=to_drop_columns).values.astype(np.float32)
+    labels = df['하루전가격(원/kWh)'].values.astype(np.float32)
+
+    data = df.drop(columns=to_drop_columns)
+    data_float = data.drop(columns=location_columns).values.astype(np.float32)
+    data_onehot = data[location_columns].values.astype(np.float32)
+    scaler = MinMaxScaler()
+    data_float = scaler.fit_transform(data_float)
+    labels = scaler.fit_transform(labels.reshape(-1, 1))
+
+    print(data_float.shape, data_onehot.shape)
+
+    data = np.concat([data_float, data_onehot], axis=1)
 
     train_size = int(0.9 * len(df))
 
-    train_df = df[:train_size]
-    val_df = df[train_size:]
+    train_data = data[:train_size]
+    val_data = data[train_size:]
 
-    train_dataset = OIBCDataset(train_df, window_size, forecast_size)
-    val_dataset = OIBCDataset(val_df, window_size, forecast_size)
+    train_label = labels[:train_size]
+    val_label = labels[:train_size]
+
+    train_dataset = OIBCDataset(train_data, train_label, window_size, forecast_size)
+    val_dataset = OIBCDataset(val_data, val_label, window_size, forecast_size)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
-    return train_dataloader, val_dataloader
+    return train_dataloader, val_dataloader, scaler
 

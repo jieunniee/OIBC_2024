@@ -54,11 +54,14 @@ class series_decomp(torch.nn.Module):
 
 
 class LTSF_DLinear(torch.nn.Module):
-    def __init__(self, window_size, forcast_size, kernel_size, individual, feature_size):
+    def __init__(self, window_size, forcast_size, kernel_size, individual, feature_size, onehot_size=0):
         super(LTSF_DLinear, self).__init__()
         self.window_size = window_size
         self.forcast_size = forcast_size
+        self.onehot_size = onehot_size
         self.decompsition = series_decomp(kernel_size)
+        self.decompsition_onehot = series_decomp(1)
+        self.fc_onehot = torch.nn.Linear(self.forcast_size + self.onehot_size, self.forcast_size)
         self.individual = individual
         self.channels = feature_size
         if self.individual:
@@ -80,8 +83,20 @@ class LTSF_DLinear(torch.nn.Module):
                 (1 / self.window_size) * torch.ones([self.forcast_size, self.window_size]))
 
     def forward(self, x):
-        trend_init, seasonal_init = self.decompsition(x)
+        # 원핫 인코딩된 데이터는 따로 처리 CNN Kernel = 1
+        x_data = x[..., :32]
+        x_onehot = x[..., 32:]
+        trend_init, seasonal_init = self.decompsition(x_data)
+        trend_onehot, seasonal_onehot = self.decompsition_onehot(x_onehot)
+        # trend_onehot, seasonal_onehot = x_onehot, x_onehot  # 그대로 넣기
+        # print(x_data.shape, trend_init.shape, x_onehot.shape)
+
+        # 원핫 데이터와 concat
+        trend_init = torch.concat([trend_init, trend_onehot], dim=2)
+        seasonal_init = torch.concat([seasonal_init, seasonal_onehot], dim=2)
         trend_init, seasonal_init = trend_init.permute(0, 2, 1), seasonal_init.permute(0, 2, 1)
+
+        # 이후 원본 DLinear와 같음
         if self.individual:
             trend_output = torch.zeros([trend_init.size(0), trend_init.size(1), self.forcast_size],
                                        dtype=trend_init.dtype).to(trend_init.device)
@@ -94,6 +109,8 @@ class LTSF_DLinear(torch.nn.Module):
             trend_output = self.Linear_Trend(trend_init)
             seasonal_output = self.Linear_Seasonal(seasonal_init)
         x = seasonal_output + trend_output
+        # print(x.shape, x_onehot.shape)
+        # x = self.fc_onehot(torch.concat([x, x_onehot], dim=1))
         return x.permute(0, 2, 1)
 
 
