@@ -28,7 +28,7 @@ class OIBCDataset(Dataset):
 
 
 def get_dataloader(window_size, forecast_size, batch_size=128):
-    to_drop_columns = ['하루전가격(원/kWh)', '확정가격여부', 'ts']
+    to_drop_columns = ['실시간 확정 가격(원/kWh)', '확정가격여부', 'ts']
     location_columns = []
 
     df = pd.read_csv('OIBC_2024_DATA/data/train_dataset_with_condition.csv')
@@ -44,7 +44,7 @@ def get_dataloader(window_size, forecast_size, batch_size=128):
     # df = df[df['location_Bonggae-dong'] == True]
 
     # data = df.drop(columns=to_drop_columns).values.astype(np.float32)
-    labels = df['하루전가격(원/kWh)'].values.astype(np.float32)
+    labels = df['실시간 확정 가격(원/kWh)'].values.astype(np.float32)
 
     data = df.drop(columns=to_drop_columns)
     data_float = data.drop(columns=location_columns).values.astype(np.float32)

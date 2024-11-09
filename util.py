@@ -47,7 +47,7 @@ def calculate_measure(actual, forecast):
 
     e_F = 0.2 * e1 + 0.8 * e2 - (Accuracy - 0.95)
 
-    return e_F
+    return e_F, Accuracy
 
 
 class CustomLoss(nn.Module):
@@ -63,4 +63,4 @@ class CustomLoss(nn.Module):
         loss_value = calculate_measure(actual_np, forecast_np)
 
         # 결과를 PyTorch 텐서로 변환하여 반환
-        return torch.tensor(loss_value, requires_grad=True)
+        return torch.tensor(loss_value[0], requires_grad=True), loss_value[1]

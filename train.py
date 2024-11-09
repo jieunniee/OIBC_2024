@@ -11,6 +11,8 @@ from cnn_lstm import CNNLSTMRegressor
 
 
 def save_checkpoint(model, optimizer, epoch, loss, file_folder):
+    # if os.path.exists(file_folder):
+    os.makedirs(file_folder, exist_ok=True)
     """
     모델의 체크포인트를 저장합니다.
 
@@ -35,10 +37,10 @@ def save_checkpoint(model, optimizer, epoch, loss, file_folder):
 def train():
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     # device = 'cpu'
-    WINDOW_SIZE = 288
-    FORECAST_SIZE = 28*24
-    EPOCH = 10
-    BATCH_SIZE = 64
+    WINDOW_SIZE = 7*24*5
+    FORECAST_SIZE = 7*24*5
+    EPOCH = 50
+    BATCH_SIZE = 4
     FEATURE_SIZE = 44
 
     print('device:', device)
@@ -77,6 +79,9 @@ def train():
     criterion = nn.MSELoss()
     val_criterion = CustomLoss()
 
+    best_model = None
+    best_score = 999999999.0
+
     for epoch in range(1, EPOCH + 1):
         losses = []
         model.train()
@@ -100,6 +105,7 @@ def train():
 
         val_losses = []
         val_losses2 = []
+        accs = []
         model.eval()
         with torch.no_grad():
             for val_data, label in val_dataloader:
@@ -109,13 +115,21 @@ def train():
                 output = model(val_data)
 
                 loss = criterion(label, output)
-                loss_custom = val_criterion(label, output)
+                loss_custom, accuracy = val_criterion(label, output)
                 val_losses.append(loss)
                 val_losses2.append(loss_custom)
+                accs.append(accuracy)
 
-        print('epoch {}, val loss: {:.8f}, {:.8f}'.format(epoch, sum(val_losses) / len(val_losses), sum(val_losses2) / len(val_losses2)))
+        print('epoch {}, val loss: {:.8f}, metric: {:.8f}, acc: {:.2f}%'.format(
+            epoch,
+            sum(val_losses) / len(val_losses),
+            sum(val_losses2) / len(val_losses2),
+            sum(accs) / len(accs) * 100
+        ))
 
-        save_checkpoint(model, optimizer, epoch, sum(val_losses) / len(val_losses), file_folder='checkpoint')
+        total_val_loss = sum(val_losses) / len(val_losses)
+
+        save_checkpoint(model, optimizer, epoch, total_val_loss, file_folder='checkpoint')
 
 if __name__ == '__main__':
     train()
