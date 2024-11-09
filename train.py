@@ -14,24 +14,24 @@ def train():
     WINDOW_SIZE = 288
     FORECAST_SIZE = 28*24
     EPOCH = 10
-    BATCH_SIZE = 32
+    BATCH_SIZE = 64
     FEATURE_SIZE = 44
 
     print('device:', device)
 
-    # model = LTSF_DLinear(
-    #     window_size=WINDOW_SIZE,
-    #     forcast_size=FORECAST_SIZE,  # 28일 * 5분단위
-    #     kernel_size=5,
-    #     onehot_size=12,
-    #     individual=False,
-    #     feature_size=FEATURE_SIZE,  # individual=True일 때만 사용
-    # )
-    model = CNNLSTMRegressor(
-        n_hidden=FORECAST_SIZE,
-        n_layers=3,
-        feature_size=FEATURE_SIZE,
+    model = LTSF_DLinear(
+        window_size=WINDOW_SIZE,
+        forcast_size=FORECAST_SIZE,  # 28일 * 5분단위
+        kernel_size=5,
+        onehot_size=12,
+        individual=False,
+        feature_size=FEATURE_SIZE,  # individual=True일 때만 사용
     )
+    # model = CNNLSTMRegressor(
+    #     n_hidden=FORECAST_SIZE,
+    #     n_layers=5,
+    #     feature_size=FEATURE_SIZE,
+    # )
 
     train_dataloader, val_dataloader, scaler = get_dataloader(
         window_size=WINDOW_SIZE,
@@ -51,7 +51,7 @@ def train():
     optimizer = optim.AdamW(model.parameters(), lr=5e-5)
     # criterion = CustomLoss()
     criterion = nn.MSELoss()
-    val_criterion = nn.MSELoss()
+    val_criterion = CustomLoss()
 
     for epoch in range(1, EPOCH + 1):
         losses = []
@@ -75,6 +75,7 @@ def train():
             optimizer.step()
 
         val_losses = []
+        val_losses2 = []
         model.eval()
         with torch.no_grad():
             for val_data, label in val_dataloader:
@@ -84,9 +85,11 @@ def train():
                 output = model(val_data)
 
                 loss = criterion(label, output)
+                loss_custom = val_criterion(label, output)
                 val_losses.append(loss)
+                val_losses2.append(loss_custom)
 
-        print('epoch {}, val loss: {}'.format(epoch, sum(val_losses) / len(val_losses)))
+        print('epoch {}, val loss: {:.8f}, {:.8f}'.format(epoch, sum(val_losses) / len(val_losses), sum(val_losses2) / len(val_losses2)))
 
 
 if __name__ == '__main__':
